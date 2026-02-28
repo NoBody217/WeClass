@@ -170,7 +170,11 @@ export default function App() {
   };
 
   const fetchTimetable = async () => {
-    if (!githubToken || !gistId) return;
+    if (!githubToken || !gistId) {
+      setError('请先配置 GitHub Token 和 Gist ID');
+      setShowSettings(true);
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -185,9 +189,13 @@ export default function App() {
       const content = result.files['timetable.json']?.content;
       if (content) {
         setData(migrateData(JSON.parse(content)));
+        showToast('拉取成功！');
+      } else {
+        throw new Error('Gist 中未找到 timetable.json');
       }
     } catch (err: any) {
       setError(err.message);
+      showToast('拉取失败: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -1191,9 +1199,13 @@ export default function App() {
                     </label>
                   </div>
                   
-                  <div className="pt-2">
-                    <button onClick={syncTimetable} disabled={loading} className="w-full bg-blue-50 text-blue-600 py-3 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors flex items-center justify-center gap-2">
+                  <div className="pt-2 flex flex-col gap-3">
+                    <button onClick={fetchTimetable} disabled={loading} className="w-full bg-purple-50 text-purple-600 py-3 rounded-lg text-sm font-medium hover:bg-purple-100 transition-colors flex items-center justify-center gap-2">
                       <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
+                      {loading ? '正在拉取...' : '从云端拉取 (覆盖本地)'}
+                    </button>
+                    <button onClick={syncTimetable} disabled={loading} className="w-full bg-blue-50 text-blue-600 py-3 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors flex items-center justify-center gap-2">
+                      <Save size={18} className={loading ? "animate-spin" : ""} />
                       {loading ? '正在同步...' : '手动同步到云端'}
                     </button>
                   </div>
